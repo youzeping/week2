@@ -64,11 +64,6 @@ int main()
 		}
 		poDstDS->GetRasterBand(t + 1)->RasterIO(GF_Write, StartX, StartY, tmpXlen, tmpYlen, buffTmp, tmpXlen, tmpYlen, GDT_Byte, 0, 0);
 	}
-
-	printf("Mission2 Finished!\n");
-
-
-	printf("Mission1 Finished!\n\n");
 	CPLFree(buffTmp);
 	GDALClose(poDstDS);
 	GDALClose(poSrcDS);
