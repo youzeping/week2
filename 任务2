@@ -1,0 +1,79 @@
+#include <iostream>
+using namespace std;
+#include "./gdal/gdal_priv.h"
+#pragma comment(lib, "gdal_i.lib")
+
+int main()
+{
+	GDALDataset* poSrcDS;
+	GDALDataset* poDstDS;
+	int imgXlen,imgYlen;
+	char* srcPath="Qingdao.jpg";
+	char* dstPath="res.tif";
+	GByte* buffTmp;
+	int i,bandNum,StartX,StartY,tmpXlen,tmpYlen,j,t;
+	GDALAllRegister();
+	poSrcDS=(GDALDataset*)GDALOpenShared(srcPath,GA_ReadOnly);
+	imgXlen = poSrcDS ->GetRasterXSize();
+	imgYlen = poSrcDS ->GetRasterYSize();
+	bandNum = poSrcDS ->GetRasterCount();
+	cout << "Image X Length: " << imgXlen << endl;
+	cout << "Image Y Length: " << imgYlen << endl;
+	cout << "Band number: " << bandNum << endl;
+	buffTmp = (GByte*)CPLMalloc (imgXlen*imgYlen*sizeof(GByte));
+	poDstDS = GetGDALDriverManager() -> GetDriverByName("GTiff")->Create(
+		dstPath,imgXlen,imgYlen,bandNum,GDT_Byte,NULL);
+	for(i=0;i<bandNum;i++) {
+	poSrcDS -> GetRasterBand(i+1) ->RasterIO(GF_Read,0,0,imgXlen,imgYlen,buffTmp,imgXlen,imgYlen,GDT_Byte,0,0);
+	poDstDS -> GetRasterBand(i+1) ->RasterIO(GF_Write,0,0,imgXlen,imgYlen,buffTmp,imgXlen,imgYlen,GDT_Byte,0,0);
+	printf("…………band %d processing …………\n",i);
+	}
+	StartX = 300;
+	StartY = 300;
+	tmpXlen = 100;
+	tmpYlen = 50;
+
+	buffTmp = (GByte*)CPLMalloc(tmpXlen*tmpYlen * sizeof(GByte));
+     
+
+    //分波段操作
+	for (t = 0; t < bandNum; t++) {
+		poSrcDS->GetRasterBand(t+1)->RasterIO(GF_Read, StartX, StartY, tmpXlen, tmpYlen, buffTmp, tmpXlen, tmpYlen, GDT_Byte, 0, 0);
+
+		for (j = 0; j < tmpYlen; j++) {
+			for (i = 0; i < tmpXlen; i++) {
+				buffTmp[j*tmpXlen + i] = (GByte)255;
+			}
+		}
+		poDstDS->GetRasterBand(t+1)->RasterIO(GF_Write, StartX, StartY, tmpXlen, tmpYlen, buffTmp, tmpXlen, tmpYlen, GDT_Byte, 0, 0);
+	}
+
+	StartX = 500;
+	StartY = 500;
+	tmpXlen = 50;
+	tmpYlen = 100;
+
+	buffTmp = (GByte*)CPLMalloc(tmpXlen*tmpYlen * sizeof(GByte));
+	for (t = 0; t < bandNum; t++) {
+		poSrcDS->GetRasterBand(t + 1)->RasterIO(GF_Read, StartX, StartY, tmpXlen, tmpYlen, buffTmp, tmpXlen, tmpYlen, GDT_Byte, 0, 0);
+
+		for (j = 0; j < tmpYlen; j++) {
+			for (i = 0; i < tmpXlen; i++) {
+				buffTmp[j*tmpXlen + i] = (GByte)0;
+			}
+		}
+		poDstDS->GetRasterBand(t + 1)->RasterIO(GF_Write, StartX, StartY, tmpXlen, tmpYlen, buffTmp, tmpXlen, tmpYlen, GDT_Byte, 0, 0);
+	}
+
+	printf("Mission2 Finished!\n");
+
+
+	printf("Mission1 Finished!\n\n");
+	CPLFree(buffTmp);
+	GDALClose(poDstDS);
+	GDALClose(poSrcDS);
+	system("Pause");
+	return 0;
+
+}
+ 
